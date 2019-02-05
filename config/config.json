@@ -1,0 +1,27 @@
+{
+  "$schema": "https://dev.office.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "hello-world-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/helloWorld/HelloWorldWebPart.js",
+          "manifest": "./src/webparts/helloWorld/HelloWorldWebPart.manifest.json"
+        }
+      ]
+    },
+    "listado-tiendas-con-fabric-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/listadoTiendasConFabric/ListadoTiendasConFabricWebPart.js",
+          "manifest": "./src/webparts/listadoTiendasConFabric/ListadoTiendasConFabricWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "HelloWorldWebPartStrings": "lib/webparts/helloWorld/loc/{locale}.js",
+    "ListadoTiendasConFabricWebPartStrings": "lib/webparts/listadoTiendasConFabric/loc/{locale}.js"
+  }
+}
