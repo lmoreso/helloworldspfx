@@ -7,6 +7,7 @@ export namespace Tiendas {
     
     export interface ITienda {
         Title: string;
+        Id: number;
         key: number;
         FechaApertura: Date;
         // ...Aquí las propiedades

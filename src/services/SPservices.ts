@@ -3,6 +3,7 @@ import {
     SPHttpClient,
     SPHttpClientResponse
 } from '@microsoft/sp-http';
+import { sp } from "@pnp/sp";
 import * as Entities from '../entities/tienda';
 import MockHttpClient from '../services/MockHttpClient';
 
@@ -21,6 +22,11 @@ export default class SPServices {
                 var listData: Entities.Tiendas.ITiendaCollection = { value: data };
                 return listData;
             }) as Promise<Entities.Tiendas.ITiendaCollection>;
+    }
+
+    public static deleteItemFromSharePointList(listName: string, itemId:number, context: WebPartContext): Promise<any> {
+        let list = sp.web.lists.getByTitle(listName);
+        return list.items.getById(1).delete().then( (result) => { return result; }) as Promise<any>;
     }
 
 }
