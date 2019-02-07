@@ -7,28 +7,35 @@ import { DetailsList, DetailsListLayoutMode, Selection, IColumn, SelectionMode }
 import { CommandBar } from 'office-ui-fabric-react/lib/CommandBar';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
 import { Fabric } from 'office-ui-fabric-react/lib/Fabric';
+import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
+import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { mergeStyles } from 'office-ui-fabric-react/lib/Styling';
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 import SPServices from '../../../services/SPservices';
+import CustomForm from './CustomForm';
 import * as Entities from '../../../entities/tienda';
 
 export default class ListadoTiendasConFabric extends React.Component<IListadoTiendasConFabricProps, IListadoTiendasConFabricState> {
   private _selection: Selection;
 
-  public constructor(props:any) {
+  public constructor(props: any) {
     super(props);
-    
+
     this.state = {
-      showPanel : false,
+      showPanel: false,
+      showDelete: false,
       readonly: true,
-      tiendas : this.props.tiendas,
-      selectedTienda : undefined
+      tiendas: this.props.tiendas,
+      newTienda: undefined,
+      selectedTienda: undefined,
+      formMode: 'view'
     };
-    
+
     this.viewItemClick = this.viewItemClick.bind(this);
     this.addItemClick = this.addItemClick.bind(this);
     this.deleteItemClick = this.deleteItemClick.bind(this);
-    this._setShowPanel = this._setShowPanel.bind(this);
+    this.deleteItem = this.deleteItem.bind(this);
+    
 
     this._selection = new Selection({
       onSelectionChanged: () => {
@@ -95,7 +102,7 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
           items={commandBarItems}
         />
         <DetailsList
-          items={this.props.tiendas}
+          items={this.state.tiendas}
           columns={columns}
           setKey="set"
           layoutMode={DetailsListLayoutMode.fixedColumns}
@@ -105,9 +112,31 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
           selectionMode={SelectionMode.single}
           selection={this._selection}
         />
-        <Panel isOpen={this.state.showPanel} onDismiss={this._setShowPanel(false)} type={PanelType.medium} headerText={  this.state.selectedTienda ? this.state.selectedTienda.Title : 'Nuevo elemento' }>
-          <TextField label="Title" readOnly={this.state.readonly} value={ this.state.selectedTienda ? this.state.selectedTienda.Title : 'New item' } />
-        </Panel>
+        <CustomForm showPanel={this.state.showPanel} 
+                    selectedTienda={this.state.selectedTienda}
+                    readonly={this.state.readonly}
+                    formMode={this.state.formMode}>
+        </CustomForm>
+        
+        <Dialog
+          hidden={!this.state.showDelete}
+          dialogContentProps={{
+            type: DialogType.normal,
+            title: 'Are you sure to delete?',
+            subText: 'The item will be deleted'
+          }}
+          modalProps={{
+            titleAriaId: 'myLabelId',
+            subtitleAriaId: 'mySubTextId',
+            isBlocking: false,
+            containerClassName: 'ms-dialogMainOverride'
+          }}
+        >
+          <DialogFooter>
+            <PrimaryButton onClick={this.deleteItem} text="Ok" />
+            <DefaultButton onClick={this._closeDialog} text="Cancel" />
+          </DialogFooter>
+        </Dialog>
       </Fabric>
     );
   }
@@ -116,37 +145,49 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
   private viewItemClick() {
     this.setState((state, props) => ({
       showPanel: true,
-      readonly: true
+      readonly: true,
+      formMode: 'view'
     }))
   }
 
   private addItemClick() {
     this.setState((state, props) => ({
       showPanel: true,
-      readonly: false
+      readonly: false,
+      formMode: 'new'
     }))
   }
-  
+
 
   private editItemClick() {
     window.alert('Item edited');
   }
 
   private deleteItemClick() {
-    window.alert('Delete item:'+ this.state.selectedTienda.key);
-    
-    SPServices.deleteItemFromSharePointList("Tienda", this.state.selectedTienda.Id, this.context).then((result) => {
-
-
-    });
-
-
+    this.setState({ showDelete: true });
   }
 
-  private _setShowPanel = (showPanel: boolean): (() => void) => {
-    return (): void => {
-      this.setState({ showPanel });
-    };
+  
+
+
+  private deleteItem() {
+    console.log('Item will be deleted!');
+    SPServices.deleteItemFromSharePointList("Tiendas", this.state.selectedTienda.Id).then((result) => {
+      //Reenumeramos la colección      
+      const index: number = this.state.tiendas.indexOf(this.state.selectedTienda);
+      var arrTiendas = [...this.state.tiendas];
+      arrTiendas.splice(index, 1);
+
+      this.setState({ tiendas: arrTiendas, showDelete: false, selectedTienda: undefined });
+      console.log(result);
+    });
+  }
+
+
+
+
+  private _closeDialog = (): void => {
+    this.setState({ showDelete: false });
   };
 
   private _getSelectionDetails(): Entities.Tiendas.ITienda {

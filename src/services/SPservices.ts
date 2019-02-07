@@ -3,7 +3,7 @@ import {
     SPHttpClient,
     SPHttpClientResponse
 } from '@microsoft/sp-http';
-import { sp } from "@pnp/sp";
+import { sp, ItemAddResult  } from "@pnp/sp";
 import * as Entities from '../entities/tienda';
 import MockHttpClient from '../services/MockHttpClient';
 
@@ -24,9 +24,22 @@ export default class SPServices {
             }) as Promise<Entities.Tiendas.ITiendaCollection>;
     }
 
-    public static deleteItemFromSharePointList(listName: string, itemId:number, context: WebPartContext): Promise<any> {
+    public static createTiendaInSharePoint(listName: string, tienda:Entities.Tiendas.ITienda ): Promise<any> {
         let list = sp.web.lists.getByTitle(listName);
-        return list.items.getById(1).delete().then( (result) => { return result; }) as Promise<any>;
+        return sp.web.lists.getByTitle("My List").items.add({
+            Title: tienda.Title
+        }).then((iar: ItemAddResult) => {
+            return iar;
+        });
+    }
+
+    public static deleteItemFromSharePointList(listName: string, itemId:number): Promise<any> {
+        let list = sp.web.lists.getByTitle(listName);
+        return list.items.getById(itemId).delete().then( (result) => 
+        { 
+            return result; 
+        }) as Promise<any>;
     }
 
 }
+
