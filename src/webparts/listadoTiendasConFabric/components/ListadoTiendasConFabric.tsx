@@ -23,7 +23,7 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
 
     this.state = {
       showPanel: false,
-      showDelete: false,
+      showDialog: false,
       readonly: true,
       tiendas: this.props.tiendas,
       newTienda: undefined,
@@ -35,7 +35,7 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
     this.addItemClick = this.addItemClick.bind(this);
     this.deleteItemClick = this.deleteItemClick.bind(this);
     this.deleteItem = this.deleteItem.bind(this);
-    
+    this.formClosed = this.formClosed.bind(this);
 
     this._selection = new Selection({
       onSelectionChanged: () => {
@@ -44,8 +44,8 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
         });
       }
     });
-
   }
+
   public render(): React.ReactElement<IListadoTiendasConFabricProps> {
 
     var columns = [
@@ -112,29 +112,30 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
           selectionMode={SelectionMode.single}
           selection={this._selection}
         />
-        <CustomForm showPanel={this.state.showPanel} 
-                    selectedTienda={this.state.selectedTienda}
-                    readonly={this.state.readonly}
-                    formMode={this.state.formMode}>
+        <CustomForm showPanel={this.state.showPanel}
+          selectedTienda={this.state.selectedTienda}
+          readonly={this.state.readonly}
+          formMode={this.state.formMode}
+          onClosed={this.formClosed}>
         </CustomForm>
-        
+
         <Dialog
-          hidden={!this.state.showDelete}
+          hidden={!this.state.showDialog}
           dialogContentProps={{
             type: DialogType.normal,
-            title: 'Are you sure to delete?',
-            subText: 'The item will be deleted'
+            title: this.state.dialog && this.state.dialog.title,
+            subText: this.state.dialog && this.state.dialog.subtitle
           }}
           modalProps={{
             titleAriaId: 'myLabelId',
             subtitleAriaId: 'mySubTextId',
-            isBlocking: false,
+            isBlocking: true,
             containerClassName: 'ms-dialogMainOverride'
           }}
         >
           <DialogFooter>
-            <PrimaryButton onClick={this.deleteItem} text="Ok" />
-            <DefaultButton onClick={this._closeDialog} text="Cancel" />
+            {(this.state.dialog) && (this.state.dialog.showSuccess && <PrimaryButton onClick={this.deleteItem} text="Ok" />)}
+            {(this.state.dialog) && (this.state.dialog.showCancel && <DefaultButton onClick={this._closeDialog} text="Cancel" />)}
           </DialogFooter>
         </Dialog>
       </Fabric>
@@ -142,11 +143,17 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
   }
 
 
+  private formClosed() {
+    this.setState((state, props) => ({
+      showPanel: false,
+    }));
+  }
+
   private viewItemClick() {
     this.setState((state, props) => ({
       showPanel: true,
       readonly: true,
-      formMode: 'view'
+      formMode: 'view',
     }))
   }
 
@@ -164,10 +171,18 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
   }
 
   private deleteItemClick() {
-    this.setState({ showDelete: true });
+    this.setState({
+      showDialog: true,
+      dialog: {
+        title: 'Are you sure?',
+        subtitle : 'Item will be deleted',
+        showSuccess: true,
+        showCancel: true,
+        onSuccess: this.deleteItem,
+        onDismiss: this._closeDialog
+      }
+    });
   }
-
-  
 
 
   private deleteItem() {
@@ -178,8 +193,10 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
       var arrTiendas = [...this.state.tiendas];
       arrTiendas.splice(index, 1);
 
-      this.setState({ tiendas: arrTiendas, showDelete: false, selectedTienda: undefined });
+      this.setState({ tiendas: arrTiendas, showDialog: false, selectedTienda: undefined });
       console.log(result);
+    }).catch((error) => {
+      console.log(error);
     });
   }
 
@@ -187,7 +204,7 @@ export default class ListadoTiendasConFabric extends React.Component<IListadoTie
 
 
   private _closeDialog = (): void => {
-    this.setState({ showDelete: false });
+    this.setState({ showDialog: false });
   };
 
   private _getSelectionDetails(): Entities.Tiendas.ITienda {

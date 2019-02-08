@@ -9,7 +9,15 @@ export interface IListadoTiendasConFabricProps {
 
 export interface IListadoTiendasConFabricState {
   showPanel:boolean;
-  showDelete:boolean;
+  dialog?: {
+    title: string,
+    subtitle?: string,
+    showSuccess?: boolean,
+    showCancel?: boolean,
+    onSuccess?(): void,
+    onDismiss?(): void
+  };
+  showDialog:boolean;
   selectedTienda : Entities.Tiendas.ITienda;
   newTienda : Entities.Tiendas.ITienda;
   tiendas: Entities.Tiendas.ITienda[];
